@@ -14,7 +14,7 @@ spec:
     spec:
       containers:
         - name: renegade-demo
-          image: renegade-demo:1.0
+          image: sgw105/renegade-demo:latest
           ports:
             - containerPort: 5000
 ---
