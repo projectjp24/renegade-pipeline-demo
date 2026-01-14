@@ -6,6 +6,7 @@ pipeline {
         IMAGE = "renegade-demo"
         KUBE_DEPLOYMENT = "renegade-demo"
         KUBE_NAMESPACE = "default"
+        KUBECONFIG = '/var/lib/jenkins/.kube/config'
     }
 
     options {
