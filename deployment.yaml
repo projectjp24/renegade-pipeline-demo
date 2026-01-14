@@ -1,0 +1,33 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: renegade-demo
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: renegade-demo
+  template:
+    metadata:
+      labels:
+        app: renegade-demo
+    spec:
+      containers:
+        - name: renegade-demo
+          image: renegade-demo:1.0
+          ports:
+            - containerPort: 5000
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: renegade-demo-service
+spec:
+  selector:
+    app: renegade-demo
+  ports:
+    - protocol: TCP
+      port: 80
+      targetPort: 5000
+  type: NodePort
+
