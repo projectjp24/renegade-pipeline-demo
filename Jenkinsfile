@@ -10,71 +10,74 @@ pipeline {
     }
 
     options {
-        ansiColor('xterm')   // colored console output
-        timestamps()         // show timestamps
-        timeout(time: 30, unit: 'MINUTES')  // fail if pipeline hangs
+        timestamps()
+        timeout(time: 30, unit: 'MINUTES')
     }
 
     stages {
 
         stage("Clone Repository") {
             steps {
-                echo "Cloning repository..."
-                checkout scm
+                ansiColor('xterm') {
+                    echo "Cloning repository..."
+                    checkout scm
+                }
             }
         }
 
         stage("Build Docker Image") {
             steps {
-                echo "Building Docker image: $DOCKERHUB/$IMAGE:latest"
-                sh """
-                    docker build -t $DOCKERHUB/$IMAGE:latest .
-                    echo "Docker images:"
-                    docker images | grep $IMAGE || true
-                """
+                ansiColor('xterm') {
+                    echo "Building Docker image: $DOCKERHUB/$IMAGE:latest"
+                    sh """
+                        docker build -t $DOCKERHUB/$IMAGE:latest .
+                        echo "Docker images:"
+                        docker images | grep $IMAGE || true
+                    """
+                }
             }
         }
 
         stage("Push to DockerHub") {
             steps {
-                echo "Pushing image to DockerHub..."
-                withDockerRegistry([credentialsId: 'dockerhub', url: '']) {
-                    sh """
-                        docker push $DOCKERHUB/$IMAGE:latest
-                    """
+                ansiColor('xterm') {
+                    echo "Pushing image to DockerHub..."
+                    withDockerRegistry([credentialsId: 'dockerhub', url: '']) {
+                        sh "docker push $DOCKERHUB/$IMAGE:latest"
+                    }
                 }
             }
         }
 
         stage("Deploy to Kubernetes") {
             steps {
-                echo "Applying Kubernetes manifest..."
-                sh """
-                    kubectl apply -f deployment.yaml
-                    echo "Restarting deployment: $KUBE_DEPLOYMENT"
-                    kubectl rollout restart deployment/$KUBE_DEPLOYMENT -n $KUBE_NAMESPACE
-                    echo "Waiting for rollout to complete..."
-                    kubectl rollout status deployment/$KUBE_DEPLOYMENT -n $KUBE_NAMESPACE
-                    echo "Current pods:"
-                    kubectl get pods -n $KUBE_NAMESPACE -o wide
-                    echo "Services:"
-                    kubectl get svc -n $KUBE_NAMESPACE -o wide
-                """
+                ansiColor('xterm') {
+                    echo "Applying Kubernetes manifest..."
+                    sh """
+                        kubectl apply -f deployment.yaml
+                        kubectl rollout restart deployment/$KUBE_DEPLOYMENT -n $KUBE_NAMESPACE
+                        kubectl rollout status deployment/$KUBE_DEPLOYMENT -n $KUBE_NAMESPACE
+                        kubectl get pods -n $KUBE_NAMESPACE -o wide
+                        kubectl get svc -n $KUBE_NAMESPACE -o wide
+                    """
+                }
             }
         }
     }
 
     post {
         always {
-            echo "Pipeline finished. Checking current Docker images and Kubernetes resources..."
-            sh "docker images | grep $IMAGE || true"
-            sh "kubectl get all -n $KUBE_NAMESPACE"
+            ansiColor('xterm') {
+                echo "Pipeline finished. Checking Docker images and Kubernetes resources..."
+                sh "docker images | grep $IMAGE || true"
+                sh "kubectl get all -n $KUBE_NAMESPACE"
+            }
         }
         success {
             echo "✅ Deployment succeeded!"
         }
         failure {
-            echo "❌ Deployment failed. Check logs above for errors."
+            echo "❌ Deployment failed. Check logs above."
         }
     }
 }
